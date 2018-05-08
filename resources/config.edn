@@ -1,0 +1,27 @@
+{
+
+ :secrets #profile
+ {:dev
+  {
+   :aws-access-key "AKIAJKYGKJUHDOX74EGQ"
+   :aws-secret-key "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"
+  }
+  :prod #include #join [#env HOME "/.protocols-secrets.edn"]}
+ 
+ :aws-access-key #ref [:secrets :aws-access-key]
+ 
+ :aws-secret-key #ref [:secrets :aws-secret-key]
+
+ :aws-endpoint #profile
+ {
+  :dev "http://dynamodb.ca-central-1.amazonaws.com"
+  :prod "TODO"
+  }
+
+ :aws-table #profile
+ {
+  :dev :dev.protocols
+  :prod :protocols
+ }
+ 
+}
