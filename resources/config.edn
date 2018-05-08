@@ -1,0 +1,21 @@
+{
+
+ :secrets  #include #join [#env HOME "/.protocols-secrets.edn"]
+ 
+ :aws-access-key #ref [:secrets :aws-access-key]
+ 
+ :aws-secret-key #ref [:secrets :aws-secret-key]
+
+ :aws-endpoint #profile
+ {
+  :dev "http://dynamodb.ca-central-1.amazonaws.com"
+  :prod "TODO"
+  }
+
+ :aws-table #profile
+ {
+  :dev :dev.protocols
+  :prod :protocols
+ }
+ 
+}
