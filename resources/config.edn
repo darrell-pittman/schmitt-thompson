@@ -8,8 +8,8 @@
 
  :aws-endpoint #profile
  {
-  :dev "http://dynamodb.ca-central-1.amazonaws.com"
-  :prod "TODO"
+  :dev "http://localhost:8000"
+  :prod "http://dynamodb.ca-central-1.amazonaws.com"
   }
 
  :aws-table #profile

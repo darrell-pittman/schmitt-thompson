@@ -3,7 +3,7 @@
   (:require [schmitt-thompson.config :as cfg])
   (:require [taoensso.faraday :as far])
   (:require [clojure.java.jdbc :as j])
-  (:require [clojure.core.async :as a :refer [chan <!! >!! <! go thread go-loop close!]]))
+  (:require [clojure.core.async :as a :refer [chan <!! >!! <! go thread go-loop close! put!]]))
 
 (defn protocol-key [year type]
   (str year ":" type))
@@ -28,27 +28,31 @@
 (defn put-protocol [protocol-key, year, type]
   (put-item sch/protocol protocol-key {:year year :type type}))
 
-(defn put-algorithms [info protocol-item]
+(defn put-algorithms [info protocol-item out]
   (let [sql (sch/select-statement sch/algorithm)
-        {:keys [protocol-key schmitt-db]} info
-        out (chan)]
-    (thread (j/query schmitt-db
+        {:keys [protocol-key schmitt-db]} info]
+    (future (j/query schmitt-db
                      [sql]
                      {:row-fn (fn [row] (put-item sch/algorithm protocol-key row))
                       :result-set-fn (fn [rs]
                                        (doseq [item rs]
-                                         (>!! out item))
-                                       (close! out))}))
+                                         (>!! out item)))}))
     out))
 
 
    
 (defn import-protocol [year type full-path-to-schmitt-db]
-  (let [info (import-cfg year type full-path-to-schmitt-db)
+  (let [out (chan)
+        info (import-cfg year type full-path-to-schmitt-db)
         {:keys [protocol-key dynamo-opts dynamo-table]} info
         protocol-item (put-protocol protocol-key year type)]
-    (far/put-item dynamo-opts dynamo-table protocol-item)
-    (put-algorithms info protocol-item)))
+    (put! out protocol-item)
+    (put-algorithms info protocol-item out)))
+
+; ;Beyond here be testing
+
+
+
 
 
 (let [in (import-protocol
@@ -59,9 +63,9 @@
   (go-loop []
     (let [batch (a/take 25 in)
           items (<!! (a/into [] batch))]
-          
-      (println (str "Count: " (count items)))
-      (if (seq items) (recur)))))
+      (when (seq items)
+        (println (str "Count: " (count items)))
+        (recur)))))
 
 
   

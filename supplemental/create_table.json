@@ -1,0 +1,70 @@
+{
+    "AttributeDefinitions": [
+        {
+            "AttributeName": "pk", 
+            "AttributeType": "S"
+        },
+        {
+            "AttributeName": "sk", 
+            "AttributeType": "S"
+        },
+        {
+            "AttributeName": "data", 
+            "AttributeType": "S"
+        }
+      
+    ], 
+    "TableName": "dev.protocols", 
+    "KeySchema": [
+        {
+            "AttributeName": "pk", 
+            "KeyType": "HASH"
+        },
+        {
+            "AttributeName": "sk", 
+            "KeyType": "RANGE"
+        }      
+    ], 
+    "GlobalSecondaryIndexes": [
+        {
+            "IndexName": "dev.protocols.relationships", 
+            "KeySchema": [
+                {
+                    "AttributeName": "sk", 
+                    "KeyType": "HASH"
+                },
+                {
+                    "AttributeName": "data", 
+                    "KeyType": "RANGE"
+                }
+            ], 
+            "Projection": {
+                "ProjectionType": "INCLUDE", 
+                "NonKeyAttributes": [
+                  "year",
+                  "type",
+                  "title",
+                  "searchword",
+                  "advice",
+                  "question",
+                  "maindispostion",
+                  "careadvice"
+                ]
+            }, 
+            "ProvisionedThroughput": {
+                "ReadCapacityUnits": 5, 
+                "WriteCapacityUnits": 5
+            }
+        }
+    ], 
+    "ProvisionedThroughput": {
+        "ReadCapacityUnits": 5, 
+        "WriteCapacityUnits": 5
+    }, 
+    "StreamSpecification": {
+        "StreamEnabled": false
+    }, 
+    "SSESpecification": {
+        "Enabled": false
+    }
+}
