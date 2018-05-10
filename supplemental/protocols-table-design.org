@@ -1,0 +1,34 @@
+Entity Types:
+
+Protocols - PK: Year & type, SK: Year & Type, Data: Year & Type
+SearchWords - PK: Word, SK: Protocol Id, Data: Word & Algorithm Id
+Algorithms - PK: AlgorithmID, SK: Protocol Id, Data: AlgorithmID
+InitialQuestions - PK: InitialQuestionID, SK: AlgorithmID, Data: InitialQuestionId
+Questions - PK: QuestionID, SK: AlgorithmID, Data: Questionid
+Interventions - PK: InterventionID, SK: QuestionID, InterventionId
+Advice - PK: AdviceID, SK: QuestionID, Data: AdviceId
+
+| PK                  | SK (GSI-1 PK)   | Data (GSI-1-SK)                     | Attributes                      |
+| PR:2015:ADULT       | PR:2015:ADULT   | PR:2015:ADULT                       | Year, Type, ...                 |
+| AL:2015:ADULT::1    | PR:2105:ADULT   | AL:2015:ADULT:1                     | Title, ...                      |
+| SW:2015:ADULT:CHEST | PR:2015:ADULT   | SW:2015:ADULT:CHEST#AL:2015:ADULT:1 | SearchWord, ...                 |
+| ADV:2015:ADULT:1    | AL:2015:ADULT:1 | ADV:2015:ADULT:1                    | Advice, ...                     |
+| QU:2015:ADULT:1     | AL:2015:ADULT:1 | QU:2015:ADULT:1                     | Question, ...                   |
+| DP:2015:ADULT:1     | QU:2015:ADULT:1 | DP:2015:ADULT:1                     | MainDispostion, CareAdvice, ... |
+
+
+
+GSI-1
+
+| PK              | SK                  | Projected Attributes        |
+| PR:2015:ADULT   | PR:2015:ADULT       | PK, SK. Year, Type          |
+| PR:2015:ADULT   | AL:2015:ADULT:1     | PK, SK, Title, ...          |
+| AL:2015:ADULT:1 | SW:2015:ADULT:CHEST | PK, SK, SearchWord, ...     |
+| AL:2015:ADULT:1 | ADV:2015:ADULT:1    | PK, SK, Advice, ...         |
+| AL:2015:ADULT:1 | QU:2015:ADULT:1     | PK, SK, Question, ...       |
+| QU:2015:ADULT:1 | DP:2015:ADULT:1     | PK, SK, MainDispostion, ... |
+|                 |                     |                             |
+
+
+  
+

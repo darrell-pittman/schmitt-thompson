@@ -1,9 +1,13 @@
 (ns schmitt-thompson.import
   (:require [schmitt-thompson.schema :as sch])
   (:require [schmitt-thompson.config :as cfg])
+  (:require [schmitt-thompson.utils :as utils])
   (:require [taoensso.faraday :as far])
   (:require [clojure.java.jdbc :as j])
-  (:require [clojure.core.async :as a :refer [chan <!! >!! <! go thread go-loop close! put!]]))
+  (:require [clojure.pprint :as pp ])
+  (:require [clojure.core.async
+             :as a
+             :refer [chan <!! >!! <! go thread go-loop close! put!]]))
 
 (defn protocol-key [year type]
   (str year ":" type))
@@ -44,15 +48,18 @@
 (defn import-protocol [year type full-path-to-schmitt-db]
   (let [out (chan)
         info (import-cfg year type full-path-to-schmitt-db)
-        {:keys [protocol-key dynamo-opts dynamo-table]} info
+        {:keys [protocol-key]} info
         protocol-item (put-protocol protocol-key year type)]
     (put! out protocol-item)
     (put-algorithms info protocol-item out)))
 
-; ;Beyond here be testing
+;;Beyond here be testing
 
 
-
+(defn table-items [table-name & puts-deletes]
+  (let [items-map (zipmap [:put :delete] puts-deletes)
+        filtered-map (utils/filter-map-by-val items-map seq)]
+  {table-name filtered-map}))
 
 
 (let [in (import-protocol
@@ -64,7 +71,7 @@
     (let [batch (a/take 25 in)
           items (<!! (a/into [] batch))]
       (when (seq items)
-        (println (str "Count: " (count items)))
+        (pp/pprint (table-items :dev.protocols items))
         (recur)))))
 
 

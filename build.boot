@@ -10,7 +10,8 @@
                             [digest "1.4.8"]
                             [com.taoensso/faraday "1.9.0"]
                             [aero "1.1.3"]
-                            [org.clojure/core.async "0.4.474"]])
+                            [org.clojure/core.async "0.4.474"]
+                            [org.clojure/data.codec "0.1.1"]])
 
 (task-options!
  aot {:namespace   #{'schmitt-thompson.core}}
