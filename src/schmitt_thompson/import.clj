@@ -32,27 +32,32 @@
 (defn put-protocol [protocol-key, year, type]
   (put-item sch/protocol protocol-key {:year year :type type}))
 
-(defn put-entity [schema info out]
-  (let [sql (sch/select-statement schema)
+(defn put-entity [schema query info]
+  (let [out (chan)
         {:keys [protocol-key schmitt-db]} info]
     (future (j/query
              schmitt-db
-             [sql]
+             query
              {:row-fn (fn [row] (put-item schema protocol-key row))
               :result-set-fn (fn [rs]
                                (doseq [item rs]
-                                 (>!! out item)))}))
+                                 (>!! out item))
+                               (close! out))}))
     out))
 
 
 (defn import-protocol [year type full-path-to-schmitt-db]
-  (let [out (chan)
-        info (import-cfg year type full-path-to-schmitt-db)
+  (let [info (import-cfg year type full-path-to-schmitt-db)
         {:keys [protocol-key]} info
-        protocol-item (put-protocol protocol-key year type)]
-    (put! out protocol-item)
-    (put-entity sch/algorithm info out)
-    (put-entity sch/search-word info out)))
+        protocol-item (put-protocol protocol-key year type)
+        p-chan (chan)]
+    (put! p-chan protocol-item)
+    (close! p-chan)
+    (concat [p-chan]
+            (map (fn [schema]
+                   (let [sql (sch/default-query schema)]
+                     (put-entity schema sql info)))
+                 [sch/algorithm sch/search-word]))))
 
 ;;Beyond here be testing
 
@@ -64,10 +69,10 @@
 
 (def dynamo-db (cfg/dynamo-db (cfg/config (cfg/profile))))
 
-(let [in (import-protocol
+(let [in (a/merge (import-protocol
           2017
           "ADULT"
-          "/home/darrell/projects/p30m/protocols/import/databases/2017/Algorithms_adult_AH_data.mdb")]
+          "/home/darrell/projects/p30m/protocols/import/databases/2017/Algorithms_adult_AH_data.mdb"))]
 
   (go-loop []
     (let [batch (a/take 25 in)

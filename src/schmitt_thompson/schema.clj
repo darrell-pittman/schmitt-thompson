@@ -3,6 +3,15 @@
              :as base64
              :refer [encode]]))
 
+(defn select-list [fields]
+  (clojure.string/join ", " (map #(name %) fields)))
+
+(defn default-query [schema]
+  (str
+   "select "
+   (select-list (:fields schema))
+   " from "
+   (:table schema)))
 
 (def protocol
   (let [pk-fn (fn [key _] (str "PR:" key))]
@@ -36,15 +45,5 @@
             ((:pk search-word) key row)
             "#"
             ((:pk algorithm) key row)))})
-
-(defn select-list [fields]
-  (clojure.string/join ", " (map #(name %) fields)))
-
-(defn select-statement [schema]
-  (str
-   "select "
-   (select-list (:fields schema))
-   " from "
-   (:table schema)))
 
      
