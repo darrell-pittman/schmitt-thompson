@@ -32,9 +32,8 @@
 (defn put-protocol [protocol-key, year, type]
   (put-item sch/protocol protocol-key {:year year :type type}))
 
-(defn put-entity [schema query info]
-  (let [out (chan)
-        {:keys [protocol-key schmitt-db]} info]
+(defn put-entity [schema query info out]
+  (let [{:keys [protocol-key schmitt-db]} info]
     (future (j/query
              schmitt-db
              query
@@ -56,7 +55,7 @@
     (concat [p-chan]
             (map (fn [schema]
                    (let [sql (sch/default-query schema)]
-                     (put-entity schema sql info)))
+                     (put-entity schema sql info (chan))))
                  [sch/algorithm sch/search-word]))))
 
 ;;Beyond here be testing
