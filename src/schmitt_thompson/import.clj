@@ -32,26 +32,27 @@
 (defn put-protocol [protocol-key, year, type]
   (put-item sch/protocol protocol-key {:year year :type type}))
 
-(defn put-algorithms [info protocol-item out]
-  (let [sql (sch/select-statement sch/algorithm)
+(defn put-entity [schema info out]
+  (let [sql (sch/select-statement schema)
         {:keys [protocol-key schmitt-db]} info]
-    (future (j/query schmitt-db
-                     [sql]
-                     {:row-fn (fn [row] (put-item sch/algorithm protocol-key row))
-                      :result-set-fn (fn [rs]
-                                       (doseq [item rs]
-                                         (>!! out item)))}))
+    (future (j/query
+             schmitt-db
+             [sql]
+             {:row-fn (fn [row] (put-item schema protocol-key row))
+              :result-set-fn (fn [rs]
+                               (doseq [item rs]
+                                 (>!! out item)))}))
     out))
 
 
-   
 (defn import-protocol [year type full-path-to-schmitt-db]
   (let [out (chan)
         info (import-cfg year type full-path-to-schmitt-db)
         {:keys [protocol-key]} info
         protocol-item (put-protocol protocol-key year type)]
     (put! out protocol-item)
-    (put-algorithms info protocol-item out)))
+    (put-entity sch/algorithm info out)
+    (put-entity sch/search-word info out)))
 
 ;;Beyond here be testing
 
@@ -61,20 +62,20 @@
         filtered-map (utils/filter-map-by-val items-map seq)]
   {table-name filtered-map}))
 
+(def dynamo-db (cfg/dynamo-db (cfg/config (cfg/profile))))
 
 (let [in (import-protocol
           2017
           "ADULT"
-          "/home/monkey/p30m/protocols/import/databases/2017/Algorithms_adult_AH_data.mdb")]
+          "/home/darrell/projects/p30m/protocols/import/databases/2017/Algorithms_adult_AH_data.mdb")]
 
   (go-loop []
     (let [batch (a/take 25 in)
-          items (<!! (a/into [] batch))]
+          items (<! (a/into [] batch))
+          stmt (table-items :dev.protocols items)]
       (when (seq items)
-        (pp/pprint (table-items :dev.protocols items))
+        (clojure.pprint/pprint stmt)
+        (comment (far/batch-write-item
+         dynamo-db
+         stmt))
         (recur)))))
-
-
-  
-  
-  

@@ -23,8 +23,8 @@
 
 
 (def search-word
-  {:table "SearchWord"
-   :fields [:searchword ]
+  {:table "AlgorithmSearchWords"
+   :fields [:searchword, :algorithmid ]
    :attrs [:searchword]
    :pk (fn [key row]
          (str

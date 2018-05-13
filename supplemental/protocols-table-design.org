@@ -20,14 +20,14 @@ Advice - PK: AdviceID, SK: QuestionID, Data: AdviceId
 
 GSI-1
 
-| PK              | SK                  | Projected Attributes        |
-| PR:2015:ADULT   | PR:2015:ADULT       | PK, SK. Year, Type          |
-| PR:2015:ADULT   | AL:2015:ADULT:1     | PK, SK, Title, ...          |
-| AL:2015:ADULT:1 | SW:2015:ADULT:CHEST | PK, SK, SearchWord, ...     |
-| AL:2015:ADULT:1 | ADV:2015:ADULT:1    | PK, SK, Advice, ...         |
-| AL:2015:ADULT:1 | QU:2015:ADULT:1     | PK, SK, Question, ...       |
-| QU:2015:ADULT:1 | DP:2015:ADULT:1     | PK, SK, MainDispostion, ... |
-|                 |                     |                             |
+| PK              | SK                                  | Projected Attributes        |
+| PR:2015:ADULT   | PR:2015:ADULT                       | PK, SK. Year, Type          |
+| PR:2015:ADULT   | AL:2015:ADULT:1                     | PK, SK, Title, ...          |
+| PR:2015:ADULT   | SW:2015:ADULT:CHEST#AL:2015:ADULT:1 | PK, SK, SearchWord, ...     |
+| AL:2015:ADULT:1 | ADV:2015:ADULT:1                    | PK, SK, Advice, ...         |
+| AL:2015:ADULT:1 | QU:2015:ADULT:1                     | PK, SK, Question, ...       |
+| QU:2015:ADULT:1 | DP:2015:ADULT:1                     | PK, SK, MainDispostion, ... |
+|                 |                                     |                             |
 
 
   
