@@ -48,9 +48,8 @@
                                (close! out))}))
     out))
 
-(defn import-protocol [year type full-path-to-schmitt-db schemas]
-  (let [info (import-cfg year type full-path-to-schmitt-db)
-        {:keys [protocol-key]} info
+(defn import-protocol [year type info schemas]
+  (let [{:keys [protocol-key]} info
         protocol-item (put-protocol protocol-key year type)]
     (conj
      (map (fn [schema]
@@ -69,11 +68,17 @@
 
 (def dynamo-db (cfg/dynamo-db (cfg/config (cfg/profile))))
 
-(let [in (a/merge (import-protocol
-          2017
-          "ADULT"
-          "/home/monkey/p30m/protocols/import/databases/2017/Algorithms_adult_AH_data.mdb"
-          [sch/algorithm-advice]))]
+(let [type "ADULT"
+      year 2017
+      path (str "/home/monkey/p30m/protocols/import/databases"
+                "/2017/Algorithms_adult_AH_data.mdb")
+      info (import-cfg year type path)
+      in (a/merge
+          (import-protocol
+           2017
+           "ADULT"
+           info
+           [sch/algorithm-advice]))]
 
   (loop [num-items 0]
     (let [batch (a/take 25 in)
