@@ -4,7 +4,6 @@
   (:require [schmitt-thompson.utils :as utils])
   (:require [taoensso.faraday :as far])
   (:require [clojure.java.jdbc :as j])
-  (:require [clojure.pprint :as pp ])
   (:require [clojure.core.async
              :as a
              :refer [chan <!! >!! <! go thread go-loop close! put!]]))
@@ -73,15 +72,20 @@
 (let [in (a/merge (import-protocol
           2017
           "ADULT"
-          "/home/darrell/projects/p30m/protocols/import/databases/2017/Algorithms_adult_AH_data.mdb"))]
+          "/home/monkey/p30m/protocols/import/databases/2017/Algorithms_adult_AH_data.mdb"))]
 
-  (go-loop []
+  (loop [num-items 0]
     (let [batch (a/take 25 in)
-          items (<! (a/into [] batch))
+          items (<!! (a/into [] batch))
           stmt (table-items :dev.protocols items)]
       (when (seq items)
-        (clojure.pprint/pprint stmt)
-        (comment (far/batch-write-item
-         dynamo-db
-         stmt))
-        (recur)))))
+        (let [new-num (+ num-items (count items))
+              num-dots (mod (/ new-num 25) 80)]
+          (println (apply str (repeat num-dots ".")))
+          (far/batch-write-item
+           dynamo-db
+           stmt)
+          (recur new-num)))))
+  (println "Done!"))
+
+

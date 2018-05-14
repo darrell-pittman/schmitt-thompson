@@ -8,7 +8,7 @@
 
 (defn default-query [schema]
   (str
-   "select "
+   "select distinct "
    (select-list (:fields schema))
    " from "
    (:table schema)))
@@ -32,18 +32,15 @@
 
 
 (def search-word
-  {:table "AlgorithmSearchWords"
-   :fields [:searchword, :algorithmid ]
-   :attrs [:searchword]
-   :pk (fn [key row]
-         (str
-          "SW:" key ":"
-          (String. (encode (.getBytes (:searchword row))))))
-   :sk (:pk protocol)
-   :data (fn [key row]
-           (str
-            ((:pk search-word) key row)
-            "#"
-            ((:pk algorithm) key row)))})
+  (let [pk-fn (fn [key row]
+                (str
+                 "SW:" key ":"
+                 (String. (encode (.getBytes (:searchword row))))))]
+    {:table "SearchWord"
+     :fields [:searchword ]
+     :attrs [:searchword]
+     :pk pk-fn
+     :sk (:pk protocol)
+     :data pk-fn}))
 
      
