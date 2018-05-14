@@ -18,7 +18,8 @@
     {:attrs [:year :type]
      :pk pk-fn
      :sk pk-fn
-     :data pk-fn}))
+     :data pk-fn
+     :import-sql #(default-query protocol)}))
 
 (def algorithm
   (let [pk-fn (fn [key, row]
@@ -28,7 +29,8 @@
      :attrs [:title]
      :pk pk-fn
      :sk (:pk protocol)
-     :data pk-fn}))
+     :data pk-fn
+     :import-sql #(default-query algorithm)}))
 
 
 (def search-word
@@ -41,6 +43,32 @@
      :attrs [:searchword]
      :pk pk-fn
      :sk (:pk protocol)
-     :data pk-fn}))
+     :data pk-fn
+     :import-sql #(default-query search-word)}))
+
+(def algorithm-searchwords
+  {:table "AlgorithmSearchWords"
+   :fields [:algorithmid :searchword :title]
+   :attrs [:title :searchword]
+   :pk (:pk search-word)
+   :sk (:pk algorithm)
+   :data (:pk search-word)
+   :import-sql #(str "select asw.AlgorithmID, asw.SearchWord, a.Title "
+                    "from AlgorithmSearchWords asw "
+                    "inner join Algorithm a on asw.AlgorithmID = a.AlgorithmID")})
+
+(def algorithm-advice
+  (let [pk-fn (fn [key row]
+                (str "ADV: " key ":"
+                     (:adviceid row)))]
+    {:table "Advice"
+     :fields [:adviceid :algorithmid :advice]
+     :attrs [:advice]
+     :pk pk-fn
+     :sk (:pk algorithm)
+     :data pk-fn
+     :import-sql #(default-query advice)}))
+
+
 
      

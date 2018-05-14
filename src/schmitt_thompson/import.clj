@@ -48,15 +48,15 @@
                                (close! out))}))
     out))
 
-(defn import-protocol [year type full-path-to-schmitt-db]
+(defn import-protocol [year type full-path-to-schmitt-db schemas]
   (let [info (import-cfg year type full-path-to-schmitt-db)
         {:keys [protocol-key]} info
         protocol-item (put-protocol protocol-key year type)]
     (conj
      (map (fn [schema]
-            (let [sql (sch/default-query schema)]
+            (let [sql ((:import-sql schema))]
               (put-entity schema sql info)))
-          [sch/algorithm sch/search-word])
+          schemas)
      (put-protocol protocol-key year type))))
 
 ;;Beyond here be testing
@@ -72,7 +72,8 @@
 (let [in (a/merge (import-protocol
           2017
           "ADULT"
-          "/home/monkey/p30m/protocols/import/databases/2017/Algorithms_adult_AH_data.mdb"))]
+          "/home/monkey/p30m/protocols/import/databases/2017/Algorithms_adult_AH_data.mdb"
+          [sch/algorithm-advice]))]
 
   (loop [num-items 0]
     (let [batch (a/take 25 in)
@@ -81,10 +82,11 @@
       (when (seq items)
         (let [new-num (+ num-items (count items))
               num-dots (mod (/ new-num 25) 80)]
-          (println (apply str (repeat num-dots ".")))
-          (far/batch-write-item
-           dynamo-db
-           stmt)
+          (clojure.pprint/pprint stmt)
+          ;;(println (apply str (repeat num-dots ".")))
+          ;;(far/batch-write-item
+          ;; dynamo-db
+          ;; stmt)
           (recur new-num)))))
   (println "Done!"))
 
