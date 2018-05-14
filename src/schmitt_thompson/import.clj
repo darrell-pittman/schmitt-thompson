@@ -30,10 +30,15 @@
       :data data} attrs)))
 
 (defn put-protocol [protocol-key, year, type]
-  (put-item sch/protocol protocol-key {:year year :type type}))
+  (let [out (chan)
+        p (put-item sch/protocol protocol-key {:year year :type type})]
+    (put! out p)
+    (close! out)
+    out))
 
-(defn put-entity [schema query info out]
-  (let [{:keys [protocol-key schmitt-db]} info]
+(defn put-entity [schema query info]
+  (let [out (chan)
+        {:keys [protocol-key schmitt-db]} info]
     (future (j/query
              schmitt-db
              query
@@ -44,19 +49,16 @@
                                (close! out))}))
     out))
 
-
 (defn import-protocol [year type full-path-to-schmitt-db]
   (let [info (import-cfg year type full-path-to-schmitt-db)
         {:keys [protocol-key]} info
-        protocol-item (put-protocol protocol-key year type)
-        p-chan (chan)]
-    (put! p-chan protocol-item)
-    (close! p-chan)
-    (concat [p-chan]
-            (map (fn [schema]
-                   (let [sql (sch/default-query schema)]
-                     (put-entity schema sql info (chan))))
-                 [sch/algorithm sch/search-word]))))
+        protocol-item (put-protocol protocol-key year type)]
+    (conj
+     (map (fn [schema]
+            (let [sql (sch/default-query schema)]
+              (put-entity schema sql info)))
+          [sch/algorithm sch/search-word])
+     (put-protocol protocol-key year type))))
 
 ;;Beyond here be testing
 
