@@ -75,7 +75,12 @@
       info (import-cfg year type path)
       schemas [sch/question]]
   ;;(console-writer (a/merge (import-protocol year type info schemas identity))))
-  (import-protocol year type info schemas console-writer))
+  ;;(import-protocol year type info schemas console-writer))
+  (console-writer (put-entity sch/advice-question ((:import-sql sch/advice-question)) info)))
+
+
+ 
+
   
  
       
