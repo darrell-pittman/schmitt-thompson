@@ -2,7 +2,7 @@
   (:require [schmitt-thompson.schema :as sch])
   (:require [schmitt-thompson.config :as cfg])
   (:require [schmitt-thompson.utils :as utils])
-  (:require [taoensso.faraday :as far])
+  (:require [schmitt-thompson.dynamo :as dyn])
   (:require [clojure.java.jdbc :as j])
   (:require [clojure.core.async
              :as a
@@ -48,51 +48,39 @@
                                (close! out))}))
     out))
 
-(defn import-protocol [year type info schemas]
-  (let [{:keys [protocol-key]} info
-        protocol-item (put-protocol protocol-key year type)]
-    (conj
-     (map (fn [schema]
-            (let [sql ((:import-sql schema))]
-              (put-entity schema sql info)))
-          schemas)
-     (put-protocol protocol-key year type))))
+(defn import-protocol [year type info schemas reader]
+  (let [{:keys [protocol-key]} info]
+    (reader (put-protocol protocol-key year type))
+    (map (fn [schema]
+           (let [sql ((:import-sql schema))]
+             (reader (put-entity schema sql info))))
+         schemas)))
 
 ;;Beyond here be testing
 
 
-(defn table-items [table-name & puts-deletes]
-  (let [items-map (zipmap [:put :delete] puts-deletes)
-        filtered-map (utils/filter-map-by-val items-map seq)]
-  {table-name filtered-map}))
+(def console-writer
+  (partial utils/sync-reader
+           #(clojure.pprint/pprint (dyn/table-items dyn/table %))
+           dyn/batch-size))
+           
 
-(def dynamo-db (cfg/dynamo-db (cfg/config (cfg/profile))))
+
 
 (let [type "ADULT"
       year 2017
-      path (str "/home/monkey/p30m/protocols/import/databases"
+      path (str "/home/monkey"
+                "/p30m/protocols/import/databases"
                 "/2017/Algorithms_adult_AH_data.mdb")
       info (import-cfg year type path)
-      in (a/merge
-          (import-protocol
-           2017
-           "ADULT"
-           info
-           [sch/algorithm-advice]))]
-
-  (loop [num-items 0]
-    (let [batch (a/take 25 in)
-          items (<!! (a/into [] batch))
-          stmt (table-items :dev.protocols items)]
-      (when (seq items)
-        (let [new-num (+ num-items (count items))
-              num-dots (mod (/ new-num 25) 80)]
-          (clojure.pprint/pprint stmt)
-          ;;(println (apply str (repeat num-dots ".")))
-          ;;(far/batch-write-item
-          ;; dynamo-db
-          ;; stmt)
-          (recur new-num)))))
-  (println "Done!"))
+      schemas [sch/question]]
+  ;;(console-writer (a/merge (import-protocol year type info schemas identity))))
+  (import-protocol year type info schemas console-writer))
+  
+ 
+      
+  
+      
+  
 
 

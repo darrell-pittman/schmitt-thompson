@@ -57,7 +57,7 @@
                     "from AlgorithmSearchWords asw "
                     "inner join Algorithm a on asw.AlgorithmID = a.AlgorithmID")})
 
-(def algorithm-advice
+(def advice
   (let [pk-fn (fn [key row]
                 (str "ADV: " key ":"
                      (:adviceid row)))]
@@ -68,6 +68,18 @@
      :sk (:pk algorithm)
      :data pk-fn
      :import-sql #(default-query advice)}))
+
+(def question
+  (let [pk-fn (fn [key row]
+                (str "QU:" key ":"
+                     (:questionid row)))]
+    {:table "Question"
+     :fields [:questionid :algorithmid :questionorder :question]
+     :attrs [:questionorder :question]
+     :pk pk-fn
+     :sk (:pk algorithm)
+     :data pk-fn
+     :import-sql #(default-query question)}))
 
 
 
