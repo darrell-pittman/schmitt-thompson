@@ -14,19 +14,15 @@
 (defn import-cfg [year type full-path-to-schmitt-db]
   (let [app-config (cfg/config (cfg/profile))]
     {:protocol-key (protocol-key year type)
-     :dynamo-opts (cfg/dynamo-db app-config)
-     :dynamo-table (:aws-table app-config)   
      :schmitt-db (cfg/schmitt-db full-path-to-schmitt-db)}))
 
 (defn put-item [schema protocol-key row]
   (let [pk ((:pk schema) protocol-key row)
         sk ((:sk schema) protocol-key row)
-        data ((:data schema) protocol-key row)
-        attrs (reduce #(assoc %1 %2 (%2 row)) {} (:attrs schema)) ]
+        attrs (reduce #(assoc %1 %2 (%2 row)) {} (or (:attrs schema) [])) ]
     (merge
      {:pk pk
-      :sk sk
-      :data data} attrs)))
+      :sk sk} attrs)))
 
 (defn put-protocol [protocol-key, year, type]
   (let [out (chan)
@@ -76,13 +72,13 @@
       schemas [
                sch/algorithm
                sch/search-word
-               sch/algorithm-searchwords
                sch/question
                sch/advice-question
               ]]
   ;;(console-writer (a/merge (import-protocol year type info schemas identity))))
+  ;;(import-protocol year type info schemas dyn/writer))
   (import-protocol year type info schemas dyn/writer))
-  ;;(console-writer (put-entity sch/question ((:import-sql sch/question)) info)))
+  ;;(console-writer (put-entity sch/advice-question ((:import-sql sch/advice-question)) info)))
 
 
  
@@ -92,6 +88,6 @@
       
   
       
-  
+
 
 

@@ -19,11 +19,8 @@
 (def writer (partial
              utils/sync-reader
              (fn [items]
-               (far/batch-write-item
-                opts
-                (table-items table items))
-               (println "Wrote " (count items) " items to " table))
+               (time (far/batch-write-item
+                      opts
+                      (table-items table items))))
              batch-size))
 
-
-               

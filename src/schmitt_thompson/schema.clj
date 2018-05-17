@@ -13,95 +13,72 @@
    " from "
    (:table schema)))
 
+(defn row-attr [attr]
+  (fn [_ row]
+    (attr row)))
+
+(defn default-key-fn [type id-attr]
+  (fn [key row]
+    (str type ":" key ":" (id-attr row))))
+
 (def protocol
   (let [pk-fn (fn [key _] (str "PR:" key))]
     {:attrs [:year :type]
      :pk pk-fn
-     :sk pk-fn
-     :data pk-fn
-     :import-sql #(default-query protocol)}))
-
-(def algorithm
-  (let [pk-fn (fn [key, row]
-                (str "AL:" key ":" (:algorithmid row)))]
-    {:table "Algorithm"
-     :fields [:algorithmid :title]
-     :attrs [:title]
-     :pk pk-fn
-     :sk (:pk protocol)
-     :data pk-fn
-     :import-sql #(default-query algorithm)}))
+     :sk pk-fn}))
 
 
 (def search-word
-  (let [pk-fn (fn [key row]
-                (str
-                 "SW:" key ":"
-                 (String. (encode (.getBytes (:searchword row))))))]
-    {:table "SearchWord"
-     :fields [:searchword ]
-     :attrs [:searchword]
-     :pk pk-fn
-     :sk (:pk protocol)
-     :data pk-fn
-     :import-sql #(default-query search-word)}))
+  {:table "SearchWord"
+   :fields [:searchword ]
+   :attrs [:searchword]
+   :pk (:pk protocol)
+   :sk (default-key-fn "SW" #(String. (encode (.getBytes (:searchword %)))))
+   :import-sql #(default-query search-word)})
 
-(def algorithm-searchwords
+(def algorithm
   {:table "AlgorithmSearchWords"
    :fields [:algorithmid :searchword :title]
-   :attrs [:title :searchword]
-   :pk (:pk search-word)
-   :sk (:pk algorithm)
-   :data (:pk search-word)
+   :attrs [:title]
+   :pk (:sk search-word)
+   :sk (default-key-fn "AL" :algorithmid)
    :import-sql #(str "select asw.AlgorithmID, asw.SearchWord, a.Title "
-                    "from AlgorithmSearchWords asw "
-                    "inner join Algorithm a on asw.AlgorithmID = a.AlgorithmID")})
+                     "from AlgorithmSearchWords asw "
+                     "inner join Algorithm a on "
+                     "asw.AlgorithmID = a.AlgorithmID")})
 
 ;;Use for Express only
 (def advice
-  (let [pk-fn (fn [key row]
-                (str "ADV: " key ":"
-                     (:adviceid row)))]
-    {:table "Advice"
-     :fields [:adviceid :algorithmid :advice]
-     :attrs [:advice]
-     :pk pk-fn
-     :sk (:pk algorithm)
-     :data pk-fn
-     :import-sql #(default-query advice)}))
+  {:table "Advice"
+   :fields [:adviceid :algorithmid :advice]
+   :attrs [:advice]
+   :pk (:sk algorithm)
+   :sk (default-key-fn "ADV" :adviceid)
+   :import-sql #(default-query advice)})
 
 (def question
-  (let [pk-fn (fn [key row]
-                (str "QU:" key ":"
-                     (:questionid row)))]
-    {:table "Question"
-     :fields [
-              :questionid :algorithmid :questionorder :question
-              :maindisposition :dispositionheading
-              ]
-     :attrs [:questionorder :question :maindisposition :dispositionheading]
-     :pk pk-fn
-     :sk (:pk algorithm)
-     :data pk-fn
-     :import-sql #(str "select q.QuestionID, q.AlgorithmID, q.QuestionOrder, "
-                       "q.Question, d.MainDisposition, d.DispositionHeading "
-                       "from Question q inner join Disposition d on "
-                       "q.DispositionLevel = d.LevelID")}))
+  {:table "Question"
+   :fields [
+            :questionid :algorithmid :questionorder :question
+            :maindisposition :dispositionheading
+            ]
+   :attrs [:question :questionorder :maindisposition :dispositionheading]
+   :pk (:sk algorithm)
+   :sk (default-key-fn "QU" :questionid)
+   :import-sql #(str "select q.QuestionID, q.AlgorithmID, q.QuestionOrder, "
+                     "q.Question, d.MainDisposition, d.DispositionHeading "
+                     "from Question q inner join Disposition d on "
+                     "q.DispositionLevel = d.LevelID")})
 
 ;;Use for After-Hours only
 (def advice-question
   {:table "QuestionAdvice"
    :fields [:questionid :adviceid :questionadviceorder :advice]
-   :attrs [:questionadviceorder :advice]
-   :pk (:pk advice)
-   :sk (:pk question)
-   :data (:pk advice)
+   :attrs [:advice :questionadviceorder]
+   :pk (:sk question)
+   :sk (:sk advice)
    :import-sql #(str "select qa.questionid, qa.adviceid, "
                      "qa.questionadviceorder, a.advice "
                      "from QuestionAdvice qa "
                      "inner join Advice a on qa.AdviceID = a.AdviceID")})
 
-
-
-
-     
