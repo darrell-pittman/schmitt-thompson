@@ -75,12 +75,18 @@
                 (str "QU:" key ":"
                      (:questionid row)))]
     {:table "Question"
-     :fields [:questionid :algorithmid :questionorder :question]
-     :attrs [:questionorder :question]
+     :fields [
+              :questionid :algorithmid :questionorder :question
+              :maindisposition :dispositionheading
+              ]
+     :attrs [:questionorder :question :maindisposition :dispositionheading]
      :pk pk-fn
      :sk (:pk algorithm)
      :data pk-fn
-     :import-sql #(default-query question)}))
+     :import-sql #(str "select q.QuestionID, q.AlgorithmID, q.QuestionOrder, "
+                       "q.Question, d.MainDisposition, d.DispositionHeading "
+                       "from Question q inner join Disposition d on "
+                       "q.DispositionLevel = d.LevelID")}))
 
 ;;Use for After-Hours only
 (def advice-question

@@ -73,10 +73,16 @@
                 "/p30m/protocols/import/databases"
                 "/2017/Algorithms_adult_AH_data.mdb")
       info (import-cfg year type path)
-      schemas [sch/question]]
+      schemas [
+               sch/algorithm
+               sch/search-word
+               sch/algorithm-searchwords
+               sch/question
+               sch/advice-question
+              ]]
   ;;(console-writer (a/merge (import-protocol year type info schemas identity))))
-  ;;(import-protocol year type info schemas console-writer))
-  (console-writer (put-entity sch/advice-question ((:import-sql sch/advice-question)) info)))
+  (import-protocol year type info schemas dyn/writer))
+  ;;(console-writer (put-entity sch/question ((:import-sql sch/question)) info)))
 
 
  
