@@ -11,7 +11,8 @@
                             [com.taoensso/faraday "1.9.0"]
                             [aero "1.1.3"]
                             [org.clojure/core.async "0.4.474"]
-                            [org.clojure/data.codec "0.1.1"]])
+                            [org.clojure/data.codec "0.1.1"]
+                            [ring/ring-core "1.6.3"]])
 
 (task-options!
  aot {:namespace   #{'schmitt-thompson.core}}
@@ -32,11 +33,34 @@
   (let [dir (if (seq dir) dir #{"target"})]
     (comp (aot) (pom) (uber) (jar) (target :dir dir))))
 
+
+
 (deftask run
   "Run the project."
   [a args ARG [str] "the arguments for the application."]
   (with-pass-thru fs
     (require '[schmitt-thompson.core :as app])
     (apply (resolve 'app/-main) args)))
+
+(deftask dev-dependencies
+  "Setup dev env"
+  []
+  (require 'boot.repl)
+  (set-env! :dependencies #(conj % '[ring/ring-jetty-adapter "1.6.3"]
+                                 '[ring/ring-devel "1.6.3"])
+            :resource-paths #(conj % "src-dev"))
+  identity)
+
+(deftask launch-server
+  "Run server hot reloading Clojure namespaces"
+  [p port VAL int "Server port (default 3000)"]
+  (require '[schmitt-thompson.dev :as dev])
+  (apply (resolve 'dev/run-dev-server) [(or port 3000)]))
+
+(deftask dev-run-server
+  "Run the development web-server"
+  [p port VAL int "Server port (default 3000)"]
+  (comp (dev-dependencies) (launch-server "-p" (str port))))
+
 
 (require '[adzerk.boot-test :refer [test]])
